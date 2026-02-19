@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "1cygcQ2xJdE=",
+  "success": true,
+  "projectFilePath": "/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/CareConnect.Core.csproj",
+  "expectedPackageFiles": [
+    "/Users/vajjalakalyan/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
+    "/Users/vajjalakalyan/.nuget/packages/microsoft.extensions.configuration.abstractions/8.0.0/microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512",
+    "/Users/vajjalakalyan/.nuget/packages/microsoft.extensions.primitives/8.0.0/microsoft.extensions.primitives.8.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

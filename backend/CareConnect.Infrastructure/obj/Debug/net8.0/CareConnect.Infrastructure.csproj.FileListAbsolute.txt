@@ -1,0 +1,15 @@
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/bin/Debug/net8.0/CareConnect.Infrastructure.deps.json
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/bin/Debug/net8.0/CareConnect.Infrastructure.dll
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/bin/Debug/net8.0/CareConnect.Infrastructure.pdb
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/bin/Debug/net8.0/CareConnect.Core.dll
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/bin/Debug/net8.0/CareConnect.Core.pdb
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/obj/Debug/net8.0/CareConnect.Infrastructure.csproj.AssemblyReference.cache
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/obj/Debug/net8.0/CareConnect.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/obj/Debug/net8.0/CareConnect.Infrastructure.AssemblyInfoInputs.cache
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/obj/Debug/net8.0/CareConnect.Infrastructure.AssemblyInfo.cs
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/obj/Debug/net8.0/CareConnect.Infrastructure.csproj.CoreCompileInputs.cache
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/obj/Debug/net8.0/CareConn.C5BB1EDD.Up2Date
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/obj/Debug/net8.0/CareConnect.Infrastructure.dll
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/obj/Debug/net8.0/refint/CareConnect.Infrastructure.dll
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/obj/Debug/net8.0/CareConnect.Infrastructure.pdb
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Infrastructure/obj/Debug/net8.0/ref/CareConnect.Infrastructure.dll

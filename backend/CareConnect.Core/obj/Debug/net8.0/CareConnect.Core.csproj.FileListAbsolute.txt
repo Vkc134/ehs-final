@@ -1,0 +1,12 @@
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/bin/Debug/net8.0/CareConnect.Core.deps.json
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/bin/Debug/net8.0/CareConnect.Core.dll
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/bin/Debug/net8.0/CareConnect.Core.pdb
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/obj/Debug/net8.0/CareConnect.Core.csproj.AssemblyReference.cache
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/obj/Debug/net8.0/CareConnect.Core.GeneratedMSBuildEditorConfig.editorconfig
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/obj/Debug/net8.0/CareConnect.Core.AssemblyInfoInputs.cache
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/obj/Debug/net8.0/CareConnect.Core.AssemblyInfo.cs
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/obj/Debug/net8.0/CareConnect.Core.csproj.CoreCompileInputs.cache
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/obj/Debug/net8.0/CareConnect.Core.dll
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/obj/Debug/net8.0/refint/CareConnect.Core.dll
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/obj/Debug/net8.0/CareConnect.Core.pdb
+/Users/vajjalakalyan/Downloads/careconnect-hub-main/backend/CareConnect.Core/obj/Debug/net8.0/ref/CareConnect.Core.dll
