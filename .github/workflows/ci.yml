@@ -27,18 +27,20 @@ jobs:
           dotnet build --configuration Release
           dotnet test --verbosity normal
 
+
   frontend-build:
     runs-on: ubuntu-latest
+    needs: backend-build
 
-  steps:
+    steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-node@v3
         with:
-        node-version: 18
+          node-version: 18
 
       - name: Install dependencies
         run: npm install
 
       - name: Build React app
-      run: npm run build
+        run: npm run build
