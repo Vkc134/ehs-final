@@ -14,42 +14,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+      - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
 
-      - name: Restore backend
-        run: dotnet restore ./backend
-
-      - name: Build backend
-        run: dotnet build ./backend --no-restore --configuration Release
-
-      - name: Run backend tests
-        run: dotnet test ./backend --no-build --verbosity normal
+      - name: Build Backend
+        run: |
+          cd backend/CareConnect.API
+          dotnet restore
+          dotnet build --configuration Release
+          dotnet test --verbosity normal
 
   frontend-build:
     runs-on: ubuntu-latest
     needs: backend-build
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Build Frontend
         run: |
           cd frontend
           npm install
-
-      - name: Build React app
-        run: |
-          cd frontend
           npm run build
