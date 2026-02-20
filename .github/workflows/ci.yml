@@ -6,8 +6,7 @@ on:
       - main
 
 jobs:
-
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,33 +22,32 @@ jobs:
         with:
           node-version: 18
 
-      # Build React
+      # Build Frontend (Vite)
       - name: Build Frontend
         run: |
           npm install
           npm run build
 
-      # Copy React build into backend wwwroot
+      # Copy dist to backend wwwroot
       - name: Copy Frontend to Backend
         run: |
-          rm -rf backend/CareConnect.API/wwwroot/*
+          rm -rf backend/CareConnect.API/wwwroot
           mkdir -p backend/CareConnect.API/wwwroot
-          cp -r build/* backend/CareConnect.API/wwwroot/
+          cp -r dist/* backend/CareConnect.API/wwwroot/
 
-      # Publish Backend
+      # Publish backend
       - name: Publish Backend
         run: |
           cd backend/CareConnect.API
-          dotnet restore
           dotnet publish -c Release -o publish
 
-      # Login to Azure
+      # Azure Login
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Deploy to App Service
+      # Deploy
       - name: Deploy to Azure
         uses: azure/webapps-deploy@v2
         with:
