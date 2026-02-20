@@ -22,24 +22,29 @@ jobs:
         with:
           node-version: 18
 
-      # Build Frontend (Vite)
+      # Build React (Vite)
       - name: Build Frontend
         run: |
           npm install
           npm run build
 
-      # Copy dist to backend wwwroot
+      # Clean & Copy dist to backend wwwroot
       - name: Copy Frontend to Backend
         run: |
           rm -rf backend/CareConnect.API/wwwroot
-          mkdir -p backend/CareConnect.API/wwwroot
-          cp -r dist/* backend/CareConnect.API/wwwroot/
+          mkdir backend/CareConnect.API/wwwroot
+          cp -r dist/. backend/CareConnect.API/wwwroot/
 
-      # Publish backend
+      # Publish backend (IMPORTANT: AFTER copying)
       - name: Publish Backend
         run: |
           cd backend/CareConnect.API
           dotnet publish -c Release -o publish
+
+      # Debug publish folder (temporary - optional)
+      - name: Check Publish Folder
+        run: |
+          ls backend/CareConnect.API/publish/wwwroot
 
       # Azure Login
       - name: Azure Login
