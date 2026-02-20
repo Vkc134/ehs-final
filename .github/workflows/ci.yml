@@ -51,5 +51,5 @@ jobs:
       - name: Deploy to Azure
         uses: azure/webapps-deploy@v2
         with:
-          app-name: careconnect-api
+          app-name: Ehsapp
           package: backend/CareConnect.API/publish
