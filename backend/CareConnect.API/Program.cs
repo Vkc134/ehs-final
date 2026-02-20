@@ -89,6 +89,8 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseDefaultFiles();
+app.MapFallbackToFile("index.html");
 
 app.MapControllers();
 
