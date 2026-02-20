@@ -29,17 +29,16 @@ jobs:
 
   frontend-build:
     runs-on: ubuntu-latest
-    needs: backend-build
 
-    steps:
+  steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+        node-version: 18
 
-      - name: Build Frontend
-        run: |
-          cd frontend
-          npm install
-          npm run build
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build React app
+      run: npm run build
