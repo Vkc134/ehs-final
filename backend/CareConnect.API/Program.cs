@@ -4,38 +4,46 @@ using CareConnect.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.FileProviders;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// -----------------------------
+// Add Services
+// -----------------------------
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// DbContext (Using InMemory for easy setup/demo, switch to SQL Server by changing UseInMemoryDatabase to UseSqlServer)
+// SQLite DB
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("CareConnect.API")));
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        b => b.MigrationsAssembly("CareConnect.API")
+    ));
 
-// Authentication
+// JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var key = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"]!);
 
-builder.Services.AddAuthentication(x =>
+builder.Services.AddAuthentication(options =>
 {
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(x =>
+.AddJwtBearer(options =>
 {
-    x.RequireHttpsMetadata = false;
-    x.SaveToken = true;
-    x.TokenValidationParameters = new TokenValidationParameters
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
@@ -46,59 +54,76 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
-// DI
+// Dependency Injection
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IICD11Service, ICD11Service>();
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
-builder.Services.AddScoped<IICD11Service, ICD11Service>();
 
 // CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
-        builder => builder
-            .AllowAnyOrigin() // For dev; restrict in prod
+        policy => policy
+            .AllowAnyOrigin()
             .AllowAnyMethod()
             .AllowAnyHeader());
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// -----------------------------
+// Middleware Pipeline
+// -----------------------------
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-
+// Enable CORS
 app.UseCors("AllowReactApp");
 
-// Ensure uploads directory exists and serve static files
+// 🔥 VERY IMPORTANT ORDER
+
+// 1️⃣ Serve React static files from wwwroot
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+// 2️⃣ Ensure uploads folder exists
 var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+
 if (!Directory.Exists(uploadsPath))
 {
     Directory.CreateDirectory(uploadsPath);
 }
 
+// Serve uploads folder
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/uploads"
 });
 
+// 3️⃣ Routing + Auth
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseDefaultFiles();
-app.MapFallbackToFile("index.html");
 
+// 4️⃣ Map Controllers
 app.MapControllers();
 
-// Seed Data
+// 5️⃣ React Fallback (for SPA routing)
+app.MapFallbackToFile("index.html");
+
+// -----------------------------
+// Database Initialization
+// -----------------------------
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    // context.Database.Migrate(); // If using SQL Server
     context.Database.EnsureCreated();
 }
 
