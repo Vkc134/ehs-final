@@ -12,47 +12,41 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Setup .NET
       - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
 
-      # Setup Node
       - uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      # Build React (Vite)
+      # 1️⃣ Build React
       - name: Build Frontend
         run: |
           npm install
           npm run build
 
-      # Clean & Copy dist to backend wwwroot
-      - name: Copy Frontend to Backend
-        run: |
-          rm -rf backend/CareConnect.API/wwwroot
-          mkdir backend/CareConnect.API/wwwroot
-          cp -r dist/. backend/CareConnect.API/wwwroot/
-
-      # Publish backend (IMPORTANT: AFTER copying)
+      # 2️⃣ Publish Backend FIRST
       - name: Publish Backend
         run: |
           cd backend/CareConnect.API
+          dotnet restore
           dotnet publish -c Release -o publish
 
-      # Debug publish folder (temporary - optional)
-      - name: Check Publish Folder
+      # 3️⃣ Copy React dist INTO publish/wwwroot
+      - name: Copy Frontend to Publish Folder
         run: |
-          ls backend/CareConnect.API/publish/wwwroot
+          rm -rf backend/CareConnect.API/publish/wwwroot
+          mkdir backend/CareConnect.API/publish/wwwroot
+          cp -r dist/. backend/CareConnect.API/publish/wwwroot/
 
-      # Azure Login
+      # 4️⃣ Azure Login
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Deploy
+      # 5️⃣ Deploy
       - name: Deploy to Azure
         uses: azure/webapps-deploy@v2
         with:
