@@ -50,12 +50,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const API = ""; // Base URL handled by axios instance (/api prefix included)
-const AUTH_API = (import.meta.env.VITE_API_URL || "http://localhost:5266") + "/auth";
 
-
-
-
+const AUTH_API = "/api/auth";
+const LOGIN_URL = `${AUTH_API}/login`;
 export default function NurseDashboard() {
   // State
 

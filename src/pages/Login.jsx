@@ -32,7 +32,7 @@ const formSchema = z.object({
     password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
-const AUTH_API = (import.meta.env.VITE_API_URL || "http://localhost:5266") + "/auth";
+const AUTH_API = "/auth";
 const LOGIN_URL = `${AUTH_API}/login`;
 
 export default function Login() {
@@ -52,7 +52,7 @@ export default function Login() {
     const onSubmit = async (values) => {
         setIsLoading(true);
         try {
-            const response = await axios.post(LOGIN_URL, values, { baseURL: "" });
+            const response = await axios.post(LOGIN_URL, values);
             // The axiosInstance interceptor will unwrap .data.data if success/data keys exist.
             // But login returns { success, message, data: { token, user } } now? 
             // Wait, I didn't refactor AuthController login yet. It returns raw { token, user }.

@@ -16,9 +16,6 @@ namespace CareConnect.Infrastructure.Data
         public DbSet<ICD11Code> ICD11Codes { get; set; }
         public DbSet<Drug> Drugs { get; set; }
 
-        // Tech Talk 2026 Registration
-        public DbSet<TechTalkRegistration> TechTalkRegistrations { get; set; }
-        public DbSet<TechTalkSettings> TechTalkSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -129,10 +126,6 @@ namespace CareConnect.Infrastructure.Data
                 new Drug { Id = 6, Name = "Azithromycin 500mg", DefaultDosage = "500mg", DefaultFrequency = "1-0-0" }
             );
 
-            // Seed TechTalk default settings
-            modelBuilder.Entity<TechTalkSettings>().HasData(
-                new TechTalkSettings { Id = 1, MaxCapacity = 50, IsOpen = true, LastExtendedAt = null, LastExtensionAmount = 0 }
-            );
         }
     }
 }

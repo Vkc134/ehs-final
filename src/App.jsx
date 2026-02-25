@@ -9,8 +9,6 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 import PharmacyDashboard from "./pages/PharmacyDashboard";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import TechTalkRegistration from "./pages/TechTalkRegistration";
-import TechTalkAdmin from "./pages/TechTalkAdmin";
 
 const queryClient = new QueryClient();
 
@@ -60,10 +58,6 @@ const App = () => (
 
             {/* Default Route Logic */}
             <Route path="/" element={<Navigate to="/login" replace />} />
-
-            {/* Tech Talk 2026 Routes (public) */}
-            <Route path="/techtalk" element={<TechTalkRegistration />} />
-            <Route path="/techtalk/admin" element={<TechTalkAdmin />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

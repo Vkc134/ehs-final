@@ -17,7 +17,15 @@ dist-ssr
 .env.local
 .env.*.local
 
+# .NET
+[Bb]in/
+[Oo]bj/
+*.db
+*.db-shm
+*.db-wal
+
 # Editor directories and files
+
 .vscode/*
 !.vscode/extensions.json
 .idea

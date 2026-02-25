@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CareConnect.API.Controllers
 {
-    [Route("auth")] // Matches /auth/login from frontend
+    [Route("api/auth")]// Matches /auth/login from frontend
     [ApiController]
     public class AuthController : ControllerBase
     {
