@@ -1,0 +1,56 @@
+name: Full Stack CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Setup .NET
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      # Setup Node
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # Build React (Vite)
+      - name: Build Frontend
+        run: |
+          npm install
+          npm run build
+      # Clean & Copy dist to backend wwwroot (Ensure directory exists)
+      - name: Copy Frontend to Backend
+        run: |
+          mkdir -p backend/CareConnect.API/wwwroot
+          rm -rf backend/CareConnect.API/wwwroot/*
+          cp -r dist/* backend/CareConnect.API/wwwroot/
+      # Publish backend (IMPORTANT: AFTER copying)
+      - name: Publish Backend
+        run: |
+          cd backend/CareConnect.API
+          dotnet publish -c Release -o publish
+      # Debug publish folder (temporary - optional)
+      - name: Check Publish Folder
+        run: |
+          ls backend/CareConnect.API/publish/wwwroot
+      # Azure Login
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Deploy
+      - name: Deploy to Azure
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: Ehsapp
+          package: backend/CareConnect.API/publish
