@@ -15,6 +15,10 @@ using CareConnect.Core.Entities;
 var builder = WebApplication.CreateBuilder(args);
 var isAzure = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME") != null;
 
+// Standardized Logging for Seeding and Environment
+Console.WriteLine($"[INIT] Environment: {(isAzure ? "Azure" : "Local")}");
+Console.WriteLine($"[INIT] WEBSITE_SITE_NAME: {Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME") ?? "NULL"}");
+
 // ── Typed Configuration (IOptions pattern) ──────────────────────────────────
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<ICD11Settings>(builder.Configuration.GetSection("ICD11"));
@@ -78,11 +82,12 @@ if (connectionString != null && (connectionString.Contains("careconnect.db") || 
     
     if (isAzure && !Directory.Exists(dbBaseDir))
     {
-        Directory.CreateDirectory(dbBaseDir);
+        try { Directory.CreateDirectory(dbBaseDir); } catch(Exception ex) { Console.WriteLine($"[ERROR] Failed to create /home/data: {ex.Message}"); }
     }
     
     var dbPath = Path.Combine(dbBaseDir, "careconnect.db");
     connectionString = $"Data Source={dbPath}";
+    Console.WriteLine($"[INIT] SQLite DB Path: {dbPath}");
     // Optimization for SQLite concurrency on Azure
     connectionString += ";Cache=Shared"; 
 }
@@ -166,9 +171,12 @@ app.UseStaticFiles();
 
 // 2️⃣ Ensure uploads folder exists in a persistent location on Azure
 var uploadsBaseDir = isAzure ? "/home/data/uploads" : Path.Combine(AppContext.BaseDirectory, "uploads");
+Console.WriteLine($"[INIT] Static Files (uploads) Path: {uploadsBaseDir}");
 
 if (!Directory.Exists(uploadsBaseDir))
-    Directory.CreateDirectory(uploadsBaseDir);
+{
+    try { Directory.CreateDirectory(uploadsBaseDir); } catch(Exception ex) { Console.WriteLine($"[ERROR] Failed to create uploads dir: {ex.Message}"); }
+}
 
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -203,17 +211,28 @@ using (var scope = app.Services.CreateScope())
     } catch { /* Ignore if fails */ }
 
     // ── Robust Seeding (Ensures data exists even if DB was already created) ──
-    if (!context.Drugs.Any())
+    var drugCount = context.Drugs.Count();
+    Console.WriteLine($"[SEED] Current Drug count: {drugCount}");
+    if (drugCount < 10) // If less than 10, it's likely just demo data or empty. Load full CSV.
     {
         try 
         {
-            // Use AppContext.BaseDirectory to find files in the published folder
+            // Try AppContext.BaseDirectory first (published folder)
             var inventoryPath = Path.Combine(AppContext.BaseDirectory, "current_inventory_6_1.csv");
+            
+            if (!File.Exists(inventoryPath)) {
+                // Fallback to CurrentDirectory (sometimes helpful in different Azure environments)
+                inventoryPath = Path.Combine(Directory.GetCurrentDirectory(), "current_inventory_6_1.csv");
+            }
+
+            Console.WriteLine($"[SEED] Looking for inventory CSV at: {inventoryPath}");
             
             if (File.Exists(inventoryPath))
             {
                 var lines = File.ReadAllLines(inventoryPath);
                 var drugs = new List<Drug>();
+                Console.WriteLine($"[SEED] CSV found. Processing {lines.Length} lines...");
+
                 // Skip header: "Med Name","Invoice No.","Batch","Pack(Price)","Pack(MRP)","Units(Per Pack)","Units(Price)","Units in Stock","Expiry","%(Discount)","%(GST)"
                 foreach (var line in lines.Skip(1))
                 {
@@ -224,7 +243,6 @@ using (var scope = app.Services.CreateScope())
                     if (parts.Length > 0)
                     {
                         var name = parts[0].Trim('"');
-                        // Use first drug occurrence to avoid duplicates in search
                         if (!drugs.Any(d => d.Name == name))
                         {
                             drugs.Add(new Drug { Name = name });
@@ -236,13 +254,16 @@ using (var scope = app.Services.CreateScope())
                 {
                     context.Drugs.AddRange(drugs);
                     context.SaveChanges();
-                    Console.WriteLine($"Successfully seeded {drugs.Count} drugs from inventory CSV.");
+                    Console.WriteLine($"[SEED] Successfully seeded {drugs.Count} drugs from inventory CSV.");
                 }
+            }
+            else {
+                Console.WriteLine($"[SEED][WARNING] Inventory CSV NOT FOUND at expected paths.");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error seeding Drugs from CSV: {ex.Message}");
+            Console.WriteLine($"[SEED][ERROR] Error seeding Drugs from CSV: {ex.Message}");
         }
     }
 
@@ -251,6 +272,9 @@ using (var scope = app.Services.CreateScope())
         try 
         {
             var csvPath = Path.Combine(AppContext.BaseDirectory, "diagnoses.csv");
+            if (!File.Exists(csvPath)) csvPath = Path.Combine(Directory.GetCurrentDirectory(), "diagnoses.csv");
+
+            Console.WriteLine($"[SEED] Looking for diagnoses CSV at: {csvPath}");
 
             if (File.Exists(csvPath))
             {
@@ -272,13 +296,16 @@ using (var scope = app.Services.CreateScope())
                 {
                     context.ICD11Codes.AddRange(codes);
                     context.SaveChanges();
-                    Console.WriteLine($"Successfully seeded {codes.Count} ICD-11 codes from CSV.");
+                    Console.WriteLine($"[SEED] Successfully seeded {codes.Count} ICD-11 codes from CSV.");
                 }
+            }
+            else {
+                Console.WriteLine($"[SEED][WARNING] Diagnoses CSV NOT FOUND.");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error seeding ICD-11 codes: {ex.Message}");
+            Console.WriteLine($"[SEED][ERROR] Error seeding ICD-11 codes: {ex.Message}");
         }
     }
 }

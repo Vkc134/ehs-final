@@ -23,7 +23,8 @@ namespace CareConnect.API.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
+                var isAzure = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME") != null;
+                _logger.LogError(ex, "[{Env}] Unhandled exception: {Message}", isAzure ? "Azure" : "Local", ex.Message);
                 await HandleExceptionAsync(context, ex);
             }
         }

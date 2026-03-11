@@ -22,10 +22,12 @@ namespace CareConnect.API.Controllers
                 return BadRequest("No file uploaded.");
 
             // Create uploads directory if it doesn't exist
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+            var isAzure = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME") != null;
+            var uploadsFolder = isAzure ? "/home/data/uploads" : Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+            
             if (!Directory.Exists(uploadsFolder))
             {
-                Directory.CreateDirectory(uploadsFolder);
+                try { Directory.CreateDirectory(uploadsFolder); } catch { /* Log or handle */ }
             }
 
             // Verify file extension
