@@ -25,7 +25,7 @@ namespace CareConnect.API.Controllers
                 return Ok(new List<dynamic>());
             }
 
-            // Search Local DB Only
+            // Search Local DB Only (Seeded from diagnoses.csv on startup)
             var results = await _context.ICD11Codes
                 .Where(c => EF.Functions.Like(c.Code, $"%{search}%") || 
                             EF.Functions.Like(c.Description, $"%{search}%"))

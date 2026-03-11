@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.FileProviders;
 using System.Text;
+using CareConnect.Core.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,9 +68,21 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // ── Database ─────────────────────────────────────────────────────────────────
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (connectionString != null && connectionString.Contains("careconnect.db"))
+{
+    // Use an absolute path for Azure persistence
+    // On Azure App Service Linux, /home is persistent
+    var dbBaseDir = Environment.GetEnvironmentVariable("HOME") ?? Directory.GetCurrentDirectory();
+    var dbPath = Path.GetFullPath(Path.Combine(dbBaseDir, "careconnect.db"));
+    connectionString = $"Data Source={dbPath}";
+    // Optimization for SQLite concurrency on Azure
+    connectionString += ";Cache=Shared"; 
+}
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
+        connectionString,
         b => b.MigrationsAssembly("CareConnect.API")));
 
 // ── Authentication ────────────────────────────────────────────────────────────
@@ -170,7 +183,104 @@ app.MapFallbackToFile("index.html");
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    context.Database.EnsureCreated();
+    context.Database.EnsureCreated(); // Use EnsureCreated for simple SQLite setups
+    
+    // Enable WAL mode for better concurrency in SQLite (Prevents "Database is locked" on Azure)
+    try {
+        var connection = context.Database.GetDbConnection();
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA journal_mode=WAL;";
+        command.ExecuteNonQuery();
+    } catch { /* Ignore if fails */ }
+
+    // ── Robust Seeding (Ensures data exists even if DB was already created) ──
+    if (!context.Drugs.Any())
+    {
+        try 
+        {
+            var inventoryPath = Path.Combine(Directory.GetCurrentDirectory(), "current_inventory_6_1.csv");
+            if (!File.Exists(inventoryPath))
+            {
+                inventoryPath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())?.FullName ?? "", "current_inventory_6_1.csv");
+            }
+
+            if (File.Exists(inventoryPath))
+            {
+                var lines = File.ReadAllLines(inventoryPath);
+                var drugs = new List<Drug>();
+                // Skip header: "Med Name","Invoice No.","Batch","Pack(Price)","Pack(MRP)","Units(Per Pack)","Units(Price)","Units in Stock","Expiry","%(Discount)","%(GST)"
+                foreach (var line in lines.Skip(1))
+                {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    
+                    // Simple CSV parse for quoted values
+                    var parts = line.Split("\",\"");
+                    if (parts.Length > 0)
+                    {
+                        var name = parts[0].Trim('"');
+                        // Use first drug occurrence to avoid duplicates in search
+                        if (!drugs.Any(d => d.Name == name))
+                        {
+                            drugs.Add(new Drug { Name = name });
+                        }
+                    }
+                }
+
+                if (drugs.Any())
+                {
+                    context.Drugs.AddRange(drugs);
+                    context.SaveChanges();
+                    Console.WriteLine($"Successfully seeded {drugs.Count} drugs from inventory CSV.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error seeding Drugs from CSV: {ex.Message}");
+        }
+    }
+
+    if (!context.ICD11Codes.Any())
+    {
+        try 
+        {
+            var csvPath = Path.Combine(Directory.GetCurrentDirectory(), "diagnoses.csv");
+            if (!File.Exists(csvPath)) 
+            {
+                // Try parent directory fallback (for different deployment structures)
+                csvPath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())?.FullName ?? "", "diagnoses.csv");
+            }
+
+            if (File.Exists(csvPath))
+            {
+                var lines = File.ReadAllLines(csvPath);
+                var codes = new List<ICD11Code>();
+                foreach (var line in lines.Skip(1))
+                {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    var firstComma = line.IndexOf(',');
+                    if (firstComma > 0)
+                    {
+                        var code = line.Substring(0, firstComma).Trim();
+                        var name = line.Substring(firstComma + 1).Trim().Trim('"');
+                        codes.Add(new ICD11Code { Code = code, Description = name });
+                    }
+                }
+                
+                if (codes.Any())
+                {
+                    context.ICD11Codes.AddRange(codes);
+                    context.SaveChanges();
+                    Console.WriteLine($"Successfully seeded {codes.Count} ICD-11 codes from CSV.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error seeding ICD-11 codes: {ex.Message}");
+        }
+    }
 }
 
 app.Run();

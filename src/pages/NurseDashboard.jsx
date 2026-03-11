@@ -987,22 +987,17 @@ function UploadDialog({ open, onOpenChange, visit, onUploadSuccess }) {
 
     try {
       // 1. Upload File
-      const uploadRes = await axios.post(`${import.meta.env.VITE_API_URL}/api/upload`, formData, {
+      // Using relative path to leverage axios instance's baseURL (/api)
+      const uploadRes = await axios.post("/upload", formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("ehs_token")}`
+          "Content-Type": "multipart/form-data"
         },
       });
 
       const attachmentPath = uploadRes.data.filePath;
 
       // 2. Update Visit
-      await axios.patch(`${import.meta.env.VITE_API_URL}/api/visits/${visit.visitId}/attachment`,
-        { attachmentPath },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("ehs_token")}` }
-        }
-      );
+      await axios.patch(`/visits/${visit.visitId}/attachment`, { attachmentPath });
 
       toast.success("File attached successfully");
       onUploadSuccess();

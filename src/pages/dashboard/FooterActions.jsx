@@ -15,7 +15,7 @@ export default function FooterActions({ onSave, onEndConsultation, onPrint, isLo
 
                 {attachmentPath && (
                     <a
-                        href={`${import.meta.env.VITE_API_URL || "http://localhost:5266"}${attachmentPath.startsWith("/") ? "" : "/"}${attachmentPath}`}
+                        href={`${import.meta.env.VITE_API_URL || window.location.origin}${attachmentPath.startsWith("/") ? "" : "/"}${attachmentPath}`}
                         target="_blank"
                         rel="noreferrer"
                         className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium mr-4"

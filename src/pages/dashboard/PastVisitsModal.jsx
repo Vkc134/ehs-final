@@ -131,7 +131,7 @@ export default function PastVisitsModal({ open, onOpenChange, visits, onCopyMedi
                                     {visit.attachmentPath && (
                                         <div className="mt-2">
                                             <a
-                                                href={`${import.meta.env.VITE_API_URL || "http://localhost:5266"}${visit.attachmentPath.startsWith("/") ? "" : "/"}${visit.attachmentPath}`}
+                                                href={`${import.meta.env.VITE_API_URL || window.location.origin}${visit.attachmentPath.startsWith("/") ? "" : "/"}${visit.attachmentPath}`}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className="text-xs flex items-center gap-1 text-blue-600 hover:underline"
