@@ -116,15 +116,6 @@ namespace CareConnect.Infrastructure.Data
                 }
             );
 
-            // Seed Drugs
-            modelBuilder.Entity<Drug>().HasData(
-                new Drug { Id = 1, Name = "Paracetamol 500mg", DefaultDosage = "500mg", DefaultFrequency = "1-0-1" },
-                new Drug { Id = 2, Name = "Amoxicillin 500mg", DefaultDosage = "500mg", DefaultFrequency = "1-0-1" },
-                new Drug { Id = 3, Name = "Ibuprofen 400mg", DefaultDosage = "400mg", DefaultFrequency = "1-0-1" },
-                new Drug { Id = 4, Name = "Cetirizine 10mg", DefaultDosage = "10mg", DefaultFrequency = "0-0-1" },
-                new Drug { Id = 5, Name = "Pantoprazole 40mg", DefaultDosage = "40mg", DefaultFrequency = "1-0-0" },
-                new Drug { Id = 6, Name = "Azithromycin 500mg", DefaultDosage = "500mg", DefaultFrequency = "1-0-0" }
-            );
 
         }
     }

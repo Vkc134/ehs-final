@@ -27,7 +27,7 @@ namespace CareConnect.API.Controllers
         public async Task<IActionResult> GetPrescriptions()
         {
             var prescriptions = await _uow.Prescriptions.GetAllDtosAsync();
-            return Ok(ApiResponse<IEnumerable<PrescriptionDto>>.Ok(prescriptions));
+            return Ok(prescriptions);
         }
 
         [HttpPost]
@@ -62,7 +62,7 @@ namespace CareConnect.API.Controllers
                 {
                     var existingId = existing.First().PrescriptionId;
                     _logger.LogInformation("Prescription already exists for VisitId: {VisitId} (Id: {PrescriptionId})", dto.VisitId, existingId);
-                    return Ok(ApiResponse<object>.Ok(new { id = existingId }, "Prescription already exists for this visit."));
+                    return Ok(new { id = existingId });
                 }
 
                 // 3. Prepare entities
@@ -106,7 +106,7 @@ namespace CareConnect.API.Controllers
                     await _uow.CommitAsync();
                     
                     _logger.LogInformation("Successfully created prescription {PrescriptionId}", prescription.PrescriptionId);
-                    return StatusCode(201, ApiResponse<object>.Ok(new { id = prescription.PrescriptionId }, "Prescription created successfully."));
+                    return StatusCode(201, new { id = prescription.PrescriptionId });
                 }
                 catch (Exception ex)
                 {

@@ -67,9 +67,9 @@ namespace CareConnect.API.Controllers
         {
             var vitals = await _uow.Vitals.GetByVisitIdAsync(visitId);
             if (vitals == null)
-                return NotFound(ApiResponse.Fail($"No vitals recorded for visit {visitId}."));
+                return NotFound(new { message = $"No vitals recorded for visit {visitId}." });
 
-            return Ok(ApiResponse<VitalsDto>.Ok(vitals));
+            return Ok(vitals);
         }
     }
 }

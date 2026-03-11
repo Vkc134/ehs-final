@@ -21,7 +21,7 @@ namespace CareConnect.API.Controllers
         public async Task<IActionResult> GetPatients()
         {
             var patients = await _uow.Patients.GetAllDtosAsync();
-            return Ok(ApiResponse<IEnumerable<PatientDto>>.Ok(patients));
+            return Ok(patients);
         }
 
         [HttpGet("{id}")]
@@ -31,9 +31,9 @@ namespace CareConnect.API.Controllers
         {
             var patient = await _uow.Patients.GetDtoByIdAsync(id);
             if (patient == null)
-                return NotFound(ApiResponse.Fail($"Patient with id {id} not found."));
+                return NotFound(new { message = $"Patient with id {id} not found." });
 
-            return Ok(ApiResponse<PatientDto>.Ok(patient));
+            return Ok(patient);
         }
 
         [HttpPost]
@@ -67,8 +67,7 @@ namespace CareConnect.API.Controllers
             await _uow.SaveChangesAsync();
 
             var result = await _uow.Patients.GetDtoByIdAsync(patient.PatientId);
-            return CreatedAtAction(nameof(GetPatient), new { id = patient.PatientId },
-                ApiResponse<PatientDto>.Ok(result!, "Patient created successfully."));
+            return CreatedAtAction(nameof(GetPatient), new { id = patient.PatientId }, result);
         }
     }
 }
