@@ -57,7 +57,7 @@ namespace CareConnect.API.Controllers
             }
 
             // If Code is missing, generate a custom one
-            string code = dto.Code;
+            string code = dto.Code ?? string.Empty;
             if (string.IsNullOrEmpty(code))
             {
                 // Generate simple custom code: CUS-{Random}
@@ -102,7 +102,7 @@ namespace CareConnect.API.Controllers
                 if (existingSet.Contains(dto.Description.ToLower()))
                     continue;
 
-                string code = dto.Code;
+                string code = dto.Code ?? string.Empty;
                 if (string.IsNullOrEmpty(code))
                 {
                     code = "CUS-" + new Random().Next(10000, 99999); // Simple random
@@ -130,6 +130,6 @@ namespace CareConnect.API.Controllers
     public class ICD11CodeDto
     {
         public string? Code { get; set; }
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
     }
 }

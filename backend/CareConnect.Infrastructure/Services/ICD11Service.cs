@@ -34,7 +34,7 @@ namespace CareConnect.Infrastructure.Services
 
         private async Task<string> GetAccessTokenAsync()
         {
-            if (_cache.TryGetValue(TokenCacheKey, out string cachedToken))
+            if (_cache.TryGetValue(TokenCacheKey, out string? cachedToken) && cachedToken != null)
             {
                 return cachedToken;
             }
@@ -67,6 +67,11 @@ namespace CareConnect.Infrastructure.Services
 
             var json = await response.Content.ReadAsStringAsync();
             var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(json);
+
+            if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.AccessToken))
+            {
+                throw new Exception("Failed to deserialize ICD11 token response.");
+            }
 
             // Cache token for slightly less than its expiry time (usually 3600s)
             var expiry = TimeSpan.FromSeconds(tokenResponse.ExpiresIn - 60);
@@ -127,9 +132,9 @@ namespace CareConnect.Infrastructure.Services
                     {
                         results.Add(new ICD11SearchResult
                         {
-                            Code = code,
-                            Title = title,
-                            LinearizationUri = linearizationUri
+                            Code = code ?? string.Empty,
+                            Title = title ?? string.Empty,
+                            LinearizationUri = linearizationUri ?? string.Empty
                         });
                     }
                 }
@@ -141,13 +146,13 @@ namespace CareConnect.Infrastructure.Services
         private class TokenResponse
         {
             [JsonPropertyName("access_token")]
-            public string AccessToken { get; set; }
+            public string AccessToken { get; set; } = string.Empty;
             
             [JsonPropertyName("expires_in")]
             public int ExpiresIn { get; set; }
             
             [JsonPropertyName("token_type")]
-            public string TokenType { get; set; }
+            public string TokenType { get; set; } = string.Empty;
         }
     }
 }
