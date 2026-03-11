@@ -23,7 +23,7 @@ namespace CareConnect.API.Controllers
             [FromQuery] int? patientId = null)
         {
             var visits = await _uow.Visits.GetFilteredDtosAsync(doctorName, patientId);
-            return Ok(ApiResponse<IEnumerable<VisitDto>>.Ok(visits));
+            return Ok(visits);
         }
 
         [HttpPost]
@@ -49,7 +49,7 @@ namespace CareConnect.API.Controllers
             await _uow.Visits.AddAsync(visit);
             await _uow.SaveChangesAsync();
 
-            return StatusCode(201, ApiResponse.Ok("Visit created successfully."));
+            return StatusCode(201, new { message = "Visit created successfully." });
         }
 
         [HttpPut("{id}/status")]
@@ -65,7 +65,7 @@ namespace CareConnect.API.Controllers
             _uow.Visits.Update(visit);
             await _uow.SaveChangesAsync();
 
-            return Ok(ApiResponse.Ok("Visit status updated."));
+            return Ok(new { message = "Visit status updated." });
         }
 
         [HttpPatch("{id}/attachment")]
@@ -81,7 +81,7 @@ namespace CareConnect.API.Controllers
             _uow.Visits.Update(visit);
             await _uow.SaveChangesAsync();
 
-            return Ok(ApiResponse.Ok("Attachment updated."));
+            return Ok(new { message = "Attachment updated." });
         }
     }
 }
