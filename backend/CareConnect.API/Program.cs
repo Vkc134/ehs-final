@@ -13,6 +13,7 @@ using System.Text;
 using CareConnect.Core.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
+var isAzure = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME") != null;
 
 // ── Typed Configuration (IOptions pattern) ──────────────────────────────────
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -69,12 +70,18 @@ builder.Services.AddSwaggerGen(c =>
 
 // ── Database ─────────────────────────────────────────────────────────────────
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (connectionString != null && connectionString.Contains("careconnect.db"))
+if (connectionString != null && (connectionString.Contains("careconnect.db") || connectionString.Contains(":memory:")))
 {
-    // Use an absolute path for Azure persistence
-    // On Azure App Service Linux, /home is persistent
-    var dbBaseDir = Environment.GetEnvironmentVariable("HOME") ?? Directory.GetCurrentDirectory();
-    var dbPath = Path.GetFullPath(Path.Combine(dbBaseDir, "careconnect.db"));
+    // On Azure App Service Linux, /home is persistent. 
+    // We use /home/data/ to keep things organized.
+    var dbBaseDir = isAzure ? "/home/data" : AppContext.BaseDirectory;
+    
+    if (isAzure && !Directory.Exists(dbBaseDir))
+    {
+        Directory.CreateDirectory(dbBaseDir);
+    }
+    
+    var dbPath = Path.Combine(dbBaseDir, "careconnect.db");
     connectionString = $"Data Source={dbPath}";
     // Optimization for SQLite concurrency on Azure
     connectionString += ";Cache=Shared"; 
@@ -157,14 +164,15 @@ app.UseCors("AllowReactApp");
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// 2️⃣ Ensure uploads folder exists
-var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
-if (!Directory.Exists(uploadsPath))
-    Directory.CreateDirectory(uploadsPath);
+// 2️⃣ Ensure uploads folder exists in a persistent location on Azure
+var uploadsBaseDir = isAzure ? "/home/data/uploads" : Path.Combine(AppContext.BaseDirectory, "uploads");
+
+if (!Directory.Exists(uploadsBaseDir))
+    Directory.CreateDirectory(uploadsBaseDir);
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(uploadsPath),
+    FileProvider = new PhysicalFileProvider(uploadsBaseDir),
     RequestPath = "/uploads"
 });
 
@@ -199,12 +207,9 @@ using (var scope = app.Services.CreateScope())
     {
         try 
         {
-            var inventoryPath = Path.Combine(Directory.GetCurrentDirectory(), "current_inventory_6_1.csv");
-            if (!File.Exists(inventoryPath))
-            {
-                inventoryPath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())?.FullName ?? "", "current_inventory_6_1.csv");
-            }
-
+            // Use AppContext.BaseDirectory to find files in the published folder
+            var inventoryPath = Path.Combine(AppContext.BaseDirectory, "current_inventory_6_1.csv");
+            
             if (File.Exists(inventoryPath))
             {
                 var lines = File.ReadAllLines(inventoryPath);
@@ -245,12 +250,7 @@ using (var scope = app.Services.CreateScope())
     {
         try 
         {
-            var csvPath = Path.Combine(Directory.GetCurrentDirectory(), "diagnoses.csv");
-            if (!File.Exists(csvPath)) 
-            {
-                // Try parent directory fallback (for different deployment structures)
-                csvPath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())?.FullName ?? "", "diagnoses.csv");
-            }
+            var csvPath = Path.Combine(AppContext.BaseDirectory, "diagnoses.csv");
 
             if (File.Exists(csvPath))
             {

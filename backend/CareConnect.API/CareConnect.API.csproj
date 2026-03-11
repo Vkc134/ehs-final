@@ -20,5 +20,14 @@
     <ProjectReference Include="..\CareConnect.Core\CareConnect.Core.csproj" />
     <ProjectReference Include="..\CareConnect.Infrastructure\CareConnect.Infrastructure.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="diagnoses.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="current_inventory_6_1.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
 </Project>
