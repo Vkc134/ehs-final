@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { Printer, Plus, Minus } from "lucide-react";
+import { Printer, Plus, Minus, AlertCircle } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -62,84 +63,82 @@ const PrintPreview = ({
         const win = window.open("", "_blank");
         if (!win) return;
 
+        // Triple Lock: Set title to empty to avoid browser printing it in the header
+        win.document.title = "";
+
+
         win.document.write(`
       <html>
         <head>
-          <title>Prescription - {patient?.name || ""}</title>
+          <title>Prescription - ${patient?.name || ""}</title>
+
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;700&display=swap');
             
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            
+            @media print {
+                @page { margin: 0 !important; }
+            }
+
             body {
               font-family: 'Inter', sans-serif;
               padding: 0;
               margin: 0;
-              font-size: 10px;
+              font-size: 9.5px; /* Slightly smaller for single-page fit */
               color: #1e293b;
               background: white;
             }
 
+
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            
             .page-container {
                 width: 210mm;
                 min-height: 297mm;
-                padding: 8mm 15mm 15mm 15mm;
+                padding: 10mm 25mm 20mm 25mm; /* Increased side padding to 25mm */
                 margin: 0 auto;
+                margin-top: 65mm; /* Area for physical letterhead */
                 position: relative;
                 display: flex;
                 flex-direction: column;
             }
 
-            /* --- LETTERHEAD --- */
-            .letterhead {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                border-bottom: 2px solid #1e3a8a;
-                padding-bottom: 10px;
-                margin-bottom: 12px;
-            }
-            .lh-left { max-width: 45%; }
-            .lh-right { max-width: 40%; text-align: right; }
-            .lh-center { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 10px; }
-            .lh-brain { width: 50px; height: 50px; border-radius: 50%; border: 1.5px solid #1e3a8a; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-            .lh-timings { margin-top: 6px; border: 1px solid #1e3a8a; border-radius: 3px; padding: 2px 6px; font-size: 7px; font-weight: 700; color: #1e3a8a; white-space: nowrap; }
-            .lh-telugu-title { color: #b91c1c; font-weight: 700; font-size: 10px; font-family: 'Noto Sans Telugu', sans-serif; line-height: 1.4; }
-            .lh-eng-title { color: #1e3a8a; font-weight: 900; font-size: 8px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
-            .lh-telugu-dr { color: #b91c1c; font-weight: 700; font-size: 9px; font-family: 'Noto Sans Telugu', sans-serif; margin-top: 5px; }
-            .lh-telugu-detail { color: #1e3a8a; font-size: 7.5px; margin-top: 2px; line-height: 1.6; }
-            .lh-eng-dr { color: #1e3a8a; font-weight: 900; font-size: 11px; }
-            .lh-eng-detail { color: #1e3a8a; font-size: 7.5px; line-height: 1.6; margin-top: 3px; }
+
+
+
+            /* --- LETTERHEAD REMOVED --- */
+
 
             /* --- CONTENT LAYOUT --- */
-            .section { margin-bottom: 15px; page-break-inside: avoid; }
+            .section { margin-bottom: 10px; page-break-inside: avoid; }
             
             .section-title {
-              font-size: 9px;
+              font-size: 8.5px;
               font-weight: 800;
               color: #1e40af;
               text-transform: uppercase;
               letter-spacing: 0.1em;
               border-bottom: 1px solid #e2e8f0;
-              padding-bottom: 3px;
-              margin-bottom: 8px;
+              padding-bottom: 2px;
+              margin-bottom: 6px;
               display: flex;
               align-items: center;
               gap: 5px;
             }
 
+
             .patient-box {
                 background: #f8fafc;
-                padding: 10px 15px;
+                padding: 8px 12px;
                 border: 1px solid #e2e8f0;
                 border-radius: 6px;
                 display: flex;
                 justify-content: space-between;
-                margin-bottom: 15px;
+                margin-bottom: 10px;
             }
 
-            .patient-name { font-size: 13px; font-weight: 800; color: #1e293b; }
-            .patient-meta { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+            .patient-name { font-size: 12px; font-weight: 800; color: #1e293b; }
+            .patient-meta { font-size: 8.5px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+
 
             .chip {
               display: inline-block;
@@ -197,25 +196,27 @@ const PrintPreview = ({
 
             .pedigree-container {
                 background: #fcfcfc;
-                padding: 15px;
+                padding: 10px;
                 border-radius: 8px;
                 border: 1px solid #f1f5f9;
             }
 
-            .pedigree-row { display: flex; justify-content: center; gap: 20px; margin-top: 10px; }
-            .pedigree-node { text-align: center; width: 60px; }
-            .node-symbol { font-size: 18px; line-height: 1; }
+            .pedigree-row { display: flex; justify-content: center; gap: 15px; margin-top: 8px; }
+            .pedigree-node { text-align: center; width: 50px; }
+            .node-symbol { font-size: 16px; line-height: 1; }
             .node-m { color: #2563eb; }
             .node-f { color: #db2777; }
-            .node-label { font-size: 7px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-            .node-info { font-size: 7px; color: #1e40af; font-weight: 600; }
+            .node-label { font-size: 6.5px; font-weight: 800; color: #64748b; text-transform: uppercase; }
+            .node-info { font-size: 6.5px; color: #1e40af; font-weight: 600; }
+
 
             .footer-signature {
-                margin-top: auto;
-                padding-top: 40px;
+                margin-top: 20px;
+                padding-top: 15px;
                 display: flex;
                 justify-content: flex-end;
             }
+
 
             .signature-text {
                 font-size: 11px;
@@ -235,23 +236,6 @@ const PrintPreview = ({
         </head>
         <body>
           <div class="page-container">
-            <div class="letterhead">
-              <div class="lh-left">
-                <p class="lh-telugu-title">మనీష న్యూరో సైకియాట్రిక్ క్లినిక్ &amp; కౌన్సెలింగ్ సెంటర్</p>
-                <p class="lh-eng-title">Manisha Neuro Psychiatric Clinic &amp; Counselling Centre</p>
-                <p class="lh-telugu-dr">డా॥ బి.ఎస్.జి. వశిష్ఠ</p>
-                <p class="lh-telugu-detail">ఎం.బి.బి.ఎస్, డి.పి.యం. (ఉస్మానియా)<br/>కన్సల్టెంట్ న్యూరో సైకియాట్రిస్ట్<br/>రిజిస్ట్రేషన్ నెం. 65349<br/>హెచ్.నెం. 6-2-305, పింజార్ల స్ట్రీట్,<br/>హనుమాన్ టెంపుల్ దగ్గర, చౌరాస్తా నుండి<br/>హనుమాన్ టెంపుల్ రోడ్, హన్మకొండ.</p>
-              </div>
-              <div class="lh-center">
-                <div class="lh-brain">🧠</div>
-                <div class="lh-timings">Timings : 11-00 a.m. to 7-00 p.m.</div>
-              </div>
-              <div class="lh-right">
-                <p class="lh-eng-dr">Dr. B.S.G. VASISTA</p>
-                <p class="lh-eng-detail">M.B.B.S., DPM (Osm)<br/>Consultant Neuro Psychiatrist<br/>Regd. No. 65349<br/>H.No. 6-2-305, Pinjarla Street,<br/>Near Hanuman Temple,<br/>Chowrasta to Hanuman Temple Road,<br/>Hanamkonda.<br/>Cell : 94907 55000, 73827 55000</p>
-              </div>
-            </div>
-
             <div class="main-content">
                 ${printRef.current.innerHTML}
             </div>
@@ -261,6 +245,7 @@ const PrintPreview = ({
             </div>
           </div>
         </body>
+
       </html>
     `);
 
@@ -347,6 +332,22 @@ const PrintPreview = ({
                             ))}
                         </div>
 
+                        {/* HEADERS/FOOTERS GUIDE */}
+                        <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 mt-4 outline outline-2 outline-blue-200/50">
+                            <p className="text-[10px] font-black text-blue-700 mb-2 uppercase tracking-widest flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4" />
+                                Clean Print Guide
+                            </p>
+                            <p className="text-[11px] text-blue-600 leading-relaxed font-bold">
+                                To hide the browser text at the very top:
+                            </p>
+                            <ol className="text-[10px] text-blue-600/80 mt-2 space-y-1 list-decimal pl-4 font-bold">
+                                <li>Click **Finalize & Print**</li>
+                                <li>Open **More Settings**</li>
+                                <li>**Uncheck** "Headers and footers"</li>
+                            </ol>
+                        </div>
+
                         <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
                             <p className="text-[10px] font-bold text-orange-700 mb-1 flex items-center gap-1.5 uppercase">
                                 <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
@@ -358,23 +359,9 @@ const PrintPreview = ({
 
                     {/* PREVIEW CONTENT */}
                     <div className="flex-1 overflow-auto bg-white rounded-[24px] shadow-2xl border p-8 border-slate-200 relative scrollbar-hide">
-                        {/* Letterhead Preview */}
-                        <div className="flex items-start justify-between border-b-2 border-blue-900 pb-4 mb-6">
-                            <div className="max-w-[45%]">
-                                <p className="text-red-700 font-bold text-[11px] leading-snug" style={{ fontFamily: "'Noto Sans Telugu', sans-serif" }}>మనీష న్యూరో సైకియాట్రిక్ క్లినిక్ &amp; కౌన్సెలింగ్ సెంటర్</p>
-                                <p className="text-blue-900 font-black text-[8px] uppercase tracking-wide mt-1">Manisha Neuro Psychiatric Clinic &amp; Counselling Centre</p>
-                                <p className="text-red-700 font-bold text-[10px] mt-1" style={{ fontFamily: "'Noto Sans Telugu', sans-serif" }}>డా॥ బి.ఎస్.జి. వశిష్ఠ</p>
-                                <p className="text-blue-900 text-[8px] mt-0.5 leading-relaxed">ఎం.బి.బి.ఎస్, డి.పి.యం. (ఉస్మానియా)<br />కన్సల్టెంట్ న్యూరో సైకియాట్రిస్ట్<br />రిజిస్ట్రేషన్ నెం. 65349<br />హెచ్.నెం. 6-2-305, పింజార్ల స్ట్రీట్, హనుమాన్ టెంపుల్ దగ్గర,<br />చౌరాస్తా నుండి హనుమాన్ టెంపుల్ రోడ్, హన్మకొండ.</p>
-                            </div>
-                            <div className="flex flex-col items-center justify-center px-3">
-                                <div className="w-12 h-12 rounded-full border-2 border-blue-800 flex items-center justify-center text-2xl">🧠</div>
-                                <div className="mt-1 border border-blue-800 rounded px-2 py-0.5 text-[7px] font-bold text-blue-800 text-center whitespace-nowrap">Timings : 11-00 a.m. to 7-00 p.m.</div>
-                            </div>
-                            <div className="max-w-[38%] text-right">
-                                <p className="text-blue-900 font-black text-sm">Dr. B.S.G. VASISTA</p>
-                                <p className="text-blue-900 text-[8px] leading-relaxed mt-1">M.B.B.S., DPM (Osm)<br />Consultant Neuro Psychiatrist<br />Regd. No. 65349<br />H.No. 6-2-305, Pinjarla Street,<br />Near Hanuman Temple,<br />Chowrasta to Hanuman Temple Road,<br />Hanamkonda.<br />Cell : 94907 55000, 73827 55000</p>
-                            </div>
+                        <div className="pt-[65mm]">
                         </div>
+                        {/* Spacing for physical letterhead */}
 
                         <div ref={printRef} className="print-area">
 
