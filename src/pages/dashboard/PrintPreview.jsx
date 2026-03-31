@@ -421,7 +421,7 @@ const PrintPreview = ({
 
                             {/* CLINICAL FINDINGS */}
                             <div className="grid grid-cols-2 gap-6">
-                                {isEnabled("complaints") && complaints.length > 0 && (
+                                {isEnabled("complaints") && Array.isArray(complaints) && complaints.length > 0 && (
                                     <div className="section">
                                         <div className="section-title">Complaints</div>
                                         <div className="flex flex-wrap gap-1.5">
@@ -429,7 +429,8 @@ const PrintPreview = ({
                                         </div>
                                     </div>
                                 )}
-                                {isEnabled("diagnosis") && diagnosis.length > 0 && (
+
+                                {isEnabled("diagnosis") && Array.isArray(diagnosis) && diagnosis.length > 0 && (
                                     <div className="section">
                                         <div className="section-title">Diagnosis</div>
                                         <div className="flex flex-wrap gap-1.5">
@@ -437,10 +438,11 @@ const PrintPreview = ({
                                         </div>
                                     </div>
                                 )}
+
                             </div>
 
                             {/* PRESCRIPTION */}
-                            {isEnabled("prescription") && medicines.length > 0 && (
+                            {isEnabled("prescription") && Array.isArray(medicines) && medicines.length > 0 && (
                                 <div className="section">
                                     <div className="section-title">℞ Medication Order</div>
                                     <table>
@@ -454,8 +456,8 @@ const PrintPreview = ({
                                                 <th>Period</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            {medicines.map((m, i) => (
+                                        <tbody className="divide-y border-b border-slate-100">
+                                            {Array.isArray(medicines) && medicines.map((m, i) => (
                                                 <tr key={i}>
                                                     <td className="text-[8px] font-black text-slate-400 uppercase">{m.type || "Tab"}</td>
                                                     <td className="med-name">{m.medicine || m.name}</td>
@@ -554,15 +556,18 @@ const PrintPreview = ({
                                 </div>
                             )}
 
-                            {/* ADVICE */}
-                            {(isEnabled("advice") && (advice || tests.length > 0)) && (
+                            {/* ADVICE & INVESTIGATIONS */}
+                            {(advice || (Array.isArray(tests) && tests.length > 0) || nextVisit) && (
                                 <div className="section">
                                     <div className="section-title">Advice & Investigations</div>
                                     <div className="space-y-4 pt-1">
                                         {advice && <div className="p-4 bg-slate-900 rounded-2xl text-[11px] leading-relaxed font-bold text-slate-100 italic">{advice}</div>}
-                                        {tests.length > 0 && (
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {tests.map((t, i) => <span key={i} className="chip" style={{ background: '#f0fdf4', color: '#16a34a' }}>{t}</span>)}
+                                        {isEnabled("advice") && Array.isArray(tests) && tests.length > 0 && (
+                                            <div className="flex-1">
+                                                <div className="section-title" style={{ fontSize: '8px', border: 'none', marginBottom: '4px' }}>Tests & Investigations</div>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {tests.map((t, i) => <span key={i} className="chip" style={{ background: '#f8fafc', color: '#475569' }}>{t}</span>)}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
