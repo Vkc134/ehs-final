@@ -24,7 +24,7 @@ import {
     CardFooter,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Stethoscope, Activity, Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { Stethoscope, Activity, Lock, Mail, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 const formSchema = z.object({
@@ -40,6 +40,7 @@ export default function Login() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [loginError, setLoginError] = useState("");
 
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -49,8 +50,16 @@ export default function Login() {
         },
     });
 
+    // Clear error when user starts typing again
+    const watchEmail = form.watch("email");
+    const watchPassword = form.watch("password");
+    React.useEffect(() => {
+        if (loginError) setLoginError("");
+    }, [watchEmail, watchPassword]);
+
     const onSubmit = async (values) => {
         setIsLoading(true);
+        setLoginError("");
         try {
             const response = await axios.post(LOGIN_URL, values);
             // The axiosInstance interceptor will unwrap .data.data if success/data keys exist.
@@ -74,9 +83,13 @@ export default function Login() {
         } catch (error) {
             console.error(error);
             if (error.response?.status === 401) {
-                toast.error("Invalid credentials");
+                const msg = "Invalid email or password. Please check your credentials and try again.";
+                setLoginError(msg);
+                toast.error(msg);
             } else {
-                toast.error("Something went wrong. Please try again.");
+                const msg = "Something went wrong. Please try again.";
+                setLoginError(msg);
+                toast.error(msg);
             }
         } finally {
             setIsLoading(false);
@@ -182,6 +195,16 @@ export default function Login() {
                                         </FormItem>
                                     )}
                                 />
+                                {loginError && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="flex items-start gap-2.5 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700"
+                                    >
+                                        <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-500" />
+                                        <p className="text-sm font-medium">{loginError}</p>
+                                    </motion.div>
+                                )}
                                 <motion.div
                                     initial={{ y: 20, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
@@ -205,15 +228,7 @@ export default function Login() {
                             </form>
                         </Form>
                     </CardContent>
-                    <CardFooter className="flex flex-col gap-4 text-center mt-2 pb-6">
-                        <div className="text-xs text-slate-500 flex items-center gap-1 justify-center">
-                            <Lock className="w-3 h-3" />
-                            <span>AES-256 Encrypted Connection</span>
-                        </div>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-widest">
-                            Authorized Personnel Only
-                        </p>
-                    </CardFooter>
+
                 </Card>
             </motion.div>
         </div>

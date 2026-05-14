@@ -52,5 +52,46 @@ namespace CareConnect.API.Controllers
             var relativePath = $"/uploads/{fileName}";
             return Ok(new { filePath = relativePath });
         }
+
+        [HttpPost("multiple")]
+        public async Task<IActionResult> UploadMultipleFiles(List<IFormFile> files)
+        {
+            if (files == null || files.Count == 0)
+                return BadRequest("No files uploaded.");
+
+            var isAzure = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME") != null;
+            var uploadsFolder = isAzure ? "/home/data/uploads" : Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+
+            if (!Directory.Exists(uploadsFolder))
+            {
+                try { Directory.CreateDirectory(uploadsFolder); } catch { /* Log or handle */ }
+            }
+
+            var allowedExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
+            var uploadedPaths = new List<string>();
+
+            foreach (var file in files)
+            {
+                if (file.Length == 0) continue;
+
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return BadRequest($"Invalid file type for '{file.FileName}'. Only PDF, JPG, and PNG are allowed.");
+                }
+
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                uploadedPaths.Add($"/uploads/{fileName}");
+            }
+
+            return Ok(new { filePaths = uploadedPaths });
+        }
     }
 }

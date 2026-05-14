@@ -38,9 +38,12 @@ axiosInstance.interceptors.response.use(
     },
     (error) => {
         if (error.response?.status === 401) {
-            // Optional: Clear storage or redirect, but be careful of loops
-            localStorage.removeItem("ehs_token");
-            window.location.href = "/login";
+            // Don't redirect if this 401 came from the login attempt itself
+            const requestUrl = error.config?.url || "";
+            if (!requestUrl.includes("/auth/login")) {
+                localStorage.removeItem("ehs_token");
+                window.location.href = "/login";
+            }
         }
         return Promise.reject(error);
     }

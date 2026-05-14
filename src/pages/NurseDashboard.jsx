@@ -960,85 +960,158 @@ export default function NurseDashboard() {
 }
 
 function UploadDialog({ open, onOpenChange, visit, onUploadSuccess }) {
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
 
   const handleFileChange = (e) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setFiles((prev) => [...prev, ...newFiles]);
+      // Reset the input so re-selecting the same file works
+      e.target.value = "";
     }
+  };
+
+  const removeFile = (index) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!file || !visit) return;
+    if (files.length === 0 || !visit) return;
 
     setIsUploading(true);
     const formData = new FormData();
-    formData.append("file", file);
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
 
     try {
-      // 1. Upload File
-      // Using relative path to leverage axios instance's baseURL (/api)
-      const uploadRes = await axios.post("/upload", formData, {
+      // 1. Upload all files
+      const uploadRes = await axios.post("/upload/multiple", formData, {
         headers: {
-          "Content-Type": "multipart/form-data"
+          "Content-Type": "multipart/form-data",
         },
       });
 
-      const attachmentPath = uploadRes.data.filePath;
+      const uploadedPaths = uploadRes.data.filePaths; // string[]
 
-      // 2. Update Visit
-      await axios.patch(`/visits/${visit.visitId}/attachment`, { attachmentPath });
+      // 2. Build combined attachment path (semicolon-separated, append to existing)
+      let existingPaths = visit.attachmentPath || "";
+      const allPaths = existingPaths
+        ? `${existingPaths};${uploadedPaths.join(";")}`
+        : uploadedPaths.join(";");
 
-      toast.success("File attached successfully");
+      // 3. Update Visit
+      await axios.patch(`/visits/${visit.visitId}/attachment`, {
+        attachmentPath: allPaths,
+      });
+
+      toast.success(
+        `${uploadedPaths.length} file${uploadedPaths.length > 1 ? "s" : ""} attached successfully`
+      );
       onUploadSuccess();
       onOpenChange(false);
-      setFile(null);
+      setFiles([]);
     } catch (error) {
       console.error("Upload failed", error);
-      toast.error("Failed to upload file");
+      toast.error("Failed to upload files");
     } finally {
       setIsUploading(false);
     }
   };
 
+  // Reset files when dialog closes
+  React.useEffect(() => {
+    if (!open) setFiles([]);
+  }, [open]);
+
+  const totalSize = files.reduce((acc, f) => acc + f.size, 0);
+
   return (
     <FormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Attach File"
+      title="Attach Files"
       icon={<ClipboardPlus className="h-5 w-5 text-primary-foreground" />}
     >
       <form onSubmit={handleUpload} className="space-y-4">
-        <div className="p-4 border border-dashed rounded-lg text-center cursor-pointer hover:bg-slate-50 transition-colors relative">
+        {/* Drop zone */}
+        <div className="p-4 border-2 border-dashed border-blue-200 rounded-xl text-center cursor-pointer hover:bg-blue-50/50 hover:border-blue-400 transition-all relative">
           <input
             type="file"
             onChange={handleFileChange}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             accept=".pdf,.jpg,.jpeg,.png"
+            multiple
           />
-          <div className="flex flex-col items-center justify-center py-4">
-            {file ? (
-              <>
-                <p className="font-semibold text-green-600">{file.name}</p>
-                <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
-              </>
-            ) : (
-              <>
-                <p className="text-sm font-medium text-slate-600">Click to select a file</p>
-                <p className="text-xs text-slate-400">PDF, JPG, PNG up to 5MB</p>
-              </>
-            )}
+          <div className="flex flex-col items-center justify-center py-4 gap-1">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 mb-2">
+              <ClipboardPlus className="h-5 w-5 text-blue-600" />
+            </div>
+            <p className="text-sm font-semibold text-slate-700">
+              Click to select files
+            </p>
+            <p className="text-xs text-slate-400">
+              PDF, JPG, PNG — select multiple files at once
+            </p>
           </div>
         </div>
 
+        {/* Selected files list */}
+        {files.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                {files.length} file{files.length > 1 ? "s" : ""} selected
+              </p>
+              <p className="text-xs text-slate-400">
+                {(totalSize / 1024).toFixed(1)} KB total
+              </p>
+            </div>
+            <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+              {files.map((file, index) => (
+                <div
+                  key={`${file.name}-${index}`}
+                  className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-100 group hover:border-blue-200 transition-colors"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-100 shrink-0">
+                      <span className="text-[10px] font-black text-blue-600 uppercase">
+                        {file.name.split(".").pop()}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-700 truncate">
+                        {file.name}
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        {(file.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(index)}
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 hover:bg-red-100 hover:text-red-500 transition-colors shrink-0"
+                    title="Remove file"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Button
           type="submit"
-          disabled={!file || isUploading}
-          className="w-full"
+          disabled={files.length === 0 || isUploading}
+          className="w-full rounded-xl py-5 text-base font-semibold"
         >
-          {isUploading ? "Uploading..." : "Upload & Attach"}
+          {isUploading
+            ? "Uploading..."
+            : `Upload & Attach${files.length > 1 ? ` (${files.length} files)` : ""}`}
         </Button>
       </form>
     </FormDialog>
